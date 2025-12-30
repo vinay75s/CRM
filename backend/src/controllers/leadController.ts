@@ -104,7 +104,9 @@ export const updateLeadController = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    res.status(200).json({ message: "Lead updated successfully", data: updatedLead });
+    res
+      .status(200)
+      .json({ message: "Lead updated successfully", data: updatedLead });
   } catch (e) {
     console.error("Error in update lead:", e);
     res.status(500).json({ message: "Internal server error" });
@@ -116,11 +118,19 @@ export const getAllLeads = async (req: AuthRequest, res: Response) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    const search = req.query.search;
 
     const filter: Record<string, unknown> = {};
 
     if (req.user?.role === Role.salesAgent) {
       filter.assignedAgent = req.user.id;
+    }
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } }, // Only name field
+        { email: { $regex: search, $options: "i" } }, // Only email field
+        { phone: { $regex: search, $options: "i" } },
+      ];
     }
 
     const leads = await Lead.find(filter)
@@ -150,7 +160,10 @@ export const getLeadById = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
 
   try {
-    const lead = await Lead.findById(id).populate("assignedAgent", "name email");
+    const lead = await Lead.findById(id).populate(
+      "assignedAgent",
+      "name email"
+    );
 
     if (!lead) {
       res.status(404).json({ message: "Lead not found" });
@@ -172,7 +185,10 @@ export const getLeadById = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const classifyLeadController = async (req: AuthRequest, res: Response) => {
+export const classifyLeadController = async (
+  req: AuthRequest,
+  res: Response
+) => {
   const { id } = req.params;
   const { classification } = req.body;
 
@@ -213,14 +229,19 @@ export const classifyLeadController = async (req: AuthRequest, res: Response) =>
       });
     }
 
-    res.status(200).json({ message: "Lead classification updated", data: lead });
+    res
+      .status(200)
+      .json({ message: "Lead classification updated", data: lead });
   } catch (error) {
     console.error("Classify lead error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const assignAgentToLeadController = async (req: AuthRequest, res: Response) => {
+export const assignAgentToLeadController = async (
+  req: AuthRequest,
+  res: Response
+) => {
   const { leadId } = req.params;
   const { agentId } = req.body;
 
@@ -264,7 +285,10 @@ export const assignAgentToLeadController = async (req: AuthRequest, res: Respons
   }
 };
 
-export const convertLeadToCustomer = async (req: AuthRequest, res: Response) => {
+export const convertLeadToCustomer = async (
+  req: AuthRequest,
+  res: Response
+) => {
   const { id } = req.params;
 
   try {
@@ -294,7 +318,9 @@ export const convertLeadToCustomer = async (req: AuthRequest, res: Response) => 
       });
     }
 
-    res.status(200).json({ message: "Lead converted successfully", data: lead });
+    res
+      .status(200)
+      .json({ message: "Lead converted successfully", data: lead });
   } catch (error) {
     console.error("Convert lead error:", error);
     res.status(500).json({ message: "Internal server error" });

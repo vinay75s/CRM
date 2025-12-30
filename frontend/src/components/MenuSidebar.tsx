@@ -1,35 +1,46 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+type Role = 'admin' | 'sales_agent' | 'developer';
+
 const MenuSidebar: React.FC = () => {
   const navigate=useNavigate()
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const userRole = user?.role as Role;
+
   function handlClick(route:any){
     navigate(route)
 
   }
-  const menuSections = [
+
+  const allMenuSections = [
     {
       title: 'MAIN',
       items: [
-        { name: 'Dashboard', icon: '🏠' , route:'/dashboard' },
+        { name: 'Dashboard', icon: '🏠' , route:'/dashboard', allowedRoles: ['admin', 'sales_agent', 'developer'] as Role[] },
       ],
     },
     {
       title: 'MANAGEMENT',
       items: [
-        { name: 'Leads', icon: '📋' , route:'/leads' },
-        { name: 'Users', icon: '👥' ,route:'/users' },
-        { name: 'Account', icon: '💼' ,route:'/account' },
+        { name: 'Leads', icon: '📋' , route:'/leads', allowedRoles: ['admin', 'sales_agent'] as Role[] },
+        { name: 'Users', icon: '👥' ,route:'/users', allowedRoles: ['admin'] as Role[] },
+        { name: 'Account', icon: '💼' ,route:'/account', allowedRoles: ['admin', 'sales_agent', 'developer'] as Role[] },
       ],
     },
     {
       title: 'SETTINGS',
       items: [
-        { name: 'Profile', icon: '⚙️', route:'/profile' },
-        { name: 'Logout', icon: '🚪' ,route:'/logout'},
+        { name: 'Profile', icon: '⚙️', route:'/profile', allowedRoles: ['admin', 'sales_agent', 'developer'] as Role[] },
+        { name: 'Logout', icon: '🚪' ,route:'/logout', allowedRoles: ['admin', 'sales_agent', 'developer'] as Role[] },
       ],
     },
   ];
+
+  const menuSections = allMenuSections.map(section => ({
+    ...section,
+    items: section.items.filter(item => item.allowedRoles.includes(userRole))
+  })).filter(section => section.items.length > 0);
 
   return (
     <div className="w-64 border border-gray-200 h-screen bg-background overflow-y-auto flex flex-col">

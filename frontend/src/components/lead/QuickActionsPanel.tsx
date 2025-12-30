@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
+import { BarChart3, UserPlus } from 'lucide-react';
 import ClassifyModal from './modals/ClassifyModal';
 import AssignAgentModal from './modals/AssignAgentModal';
-import FollowUpModal from './modals/FollowUpModal';
-import WhatsAppModal from './modals/WhatsAppModal';
-import EmailModal from './modals/EmailModal';
-import ProposalModal from './modals/ProposalModal';
 
 interface Lead {
   _id: string;
@@ -21,16 +18,12 @@ interface QuickActionsPanelProps {
 const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ lead, setLead }) => {
   const [showClassifyModal, setShowClassifyModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
-  const [showFollowUpModal, setShowFollowUpModal] = useState(false);
-  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [showProposalModal, setShowProposalModal] = useState(false);
 
   const actionButtons = [
     {
       id: 'classify',
       label: 'Classify',
-      icon: '📊',
+      icon: BarChart3,
       description: 'Set lead classification',
       onClick: () => setShowClassifyModal(true),
       color: 'bg-blue-50 hover:bg-blue-100',
@@ -38,71 +31,41 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ lead, setLead }) 
     {
       id: 'assign',
       label: 'Assign Agent',
-      icon: '👤',
+      icon: UserPlus,
       description: 'Assign to agent',
       onClick: () => setShowAssignModal(true),
       color: 'bg-purple-50 hover:bg-purple-100',
-    },
-    {
-      id: 'followup',
-      label: 'Schedule Follow-up',
-      icon: '📅',
-      description: 'Schedule follow-up',
-      onClick: () => setShowFollowUpModal(true),
-      color: 'bg-green-50 hover:bg-green-100',
-    },
-    {
-      id: 'whatsapp',
-      label: 'Send WhatsApp',
-      icon: '💬',
-      description: 'Send WhatsApp message',
-      onClick: () => setShowWhatsAppModal(true),
-      color: 'bg-emerald-50 hover:bg-emerald-100',
-    },
-    {
-      id: 'email',
-      label: 'Send Email',
-      icon: '📧',
-      description: 'Send email',
-      onClick: () => setShowEmailModal(true),
-      color: 'bg-indigo-50 hover:bg-indigo-100',
-    },
-    {
-      id: 'proposal',
-      label: 'Generate Proposal',
-      icon: '📄',
-      description: 'Create proposal',
-      onClick: () => setShowProposalModal(true),
-      color: 'bg-orange-50 hover:bg-orange-100',
     },
   ];
 
   return (
     <>
-      <div className="w-80 bg-white border-l border-gray-200 p-6 overflow-y-auto">
-        <h2 className="text-lg font-bold text-foreground mb-6">Quick Actions</h2>
+      <div className="w-full lg:w-80 bg-white border-t lg:border-t-0 lg:border-l border-gray-200 p-4 md:p-6 overflow-y-auto">
+        <h2 className="text-lg font-bold text-foreground mb-4 md:mb-6">Quick Actions</h2>
 
-        <div className="space-y-3">
-          {actionButtons.map((action) => (
-            <button
-              key={action.id}
-              onClick={action.onClick}
-              className={`w-full p-4 rounded-lg transition text-left ${action.color}`}
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xl">{action.icon}</span>
-                <div>
-                  <div className="font-semibold text-foreground">{action.label}</div>
-                  <div className="text-xs text-gray-600">{action.description}</div>
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+          {actionButtons.map((action) => {
+            const Icon = action.icon;
+            return (
+              <button
+                key={action.id}
+                onClick={action.onClick}
+                className={`w-full p-3 md:p-4 rounded-lg transition text-left ${action.color}`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <div className="font-semibold text-foreground text-sm md:text-base">{action.label}</div>
+                    <div className="text-xs text-gray-600 hidden md:block">{action.description}</div>
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Lead Info Section */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <h3 className="font-semibold text-foreground mb-4">Lead Information</h3>
+        <div className="mt-6 md:mt-8 pt-4 md:pt-6 border-t border-gray-200">
+          <h3 className="font-semibold text-foreground mb-3 md:mb-4">Lead Information</h3>
           <div className="space-y-3 text-sm">
             <div>
               <div className="text-gray-600">Status</div>
@@ -114,13 +77,12 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ lead, setLead }) 
             </div>
             <div>
               <div className="text-gray-600">Lead ID</div>
-              <div className="font-medium text-foreground text-xs">{lead._id}</div>
+              <div className="font-medium text-foreground text-xs break-all">{lead._id}</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modals */}
       {showClassifyModal && (
         <ClassifyModal
           lead={lead}
@@ -134,18 +96,6 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ lead, setLead }) 
           setLead={setLead}
           onClose={() => setShowAssignModal(false)}
         />
-      )}
-      {showFollowUpModal && (
-        <FollowUpModal lead={lead} onClose={() => setShowFollowUpModal(false)} />
-      )}
-      {showWhatsAppModal && (
-        <WhatsAppModal lead={lead} onClose={() => setShowWhatsAppModal(false)} />
-      )}
-      {showEmailModal && (
-        <EmailModal lead={lead} onClose={() => setShowEmailModal(false)} />
-      )}
-      {showProposalModal && (
-        <ProposalModal lead={lead} onClose={() => setShowProposalModal(false)} />
       )}
     </>
   );

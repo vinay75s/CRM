@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Menu } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import MenuSidebar from './components/MenuSidebar';
@@ -12,38 +14,69 @@ import UsersPage from './pages/UsersPage';
 const AppContent: React.FC = () => {
   const location = useLocation();
   const isLoginPage = location.pathname === '/login';
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className='flex w-screen min-h-screen text-foreground bg-background'>
-      {!isLoginPage && <MenuSidebar />}
-      <div className='flex-1 h-screen overflow-auto'>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route path='/leads' element={
-              <ProtectedRoute>
-                <LeadsPage />
-              </ProtectedRoute>
-            } />
-          <Route path='/leads/:id' element={
-              <ProtectedRoute>
-                <LeadProfilePage />
-              </ProtectedRoute>
-            } />
-          <Route path='/users' element={
-              <ProtectedRoute>
-                <UsersPage />
-              </ProtectedRoute>
-            } />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+    <div className="flex w-screen min-h-screen text-foreground bg-background">
+      {!isLoginPage && (
+        <MenuSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      )}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Mobile header */}
+        {!isLoginPage && (
+          <header className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 bg-background">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+            <div className="flex items-center">
+              <span className="text-primary text-xl">📊</span>
+              <span className="ml-2 font-bold text-foreground">Avacasa</span>
+            </div>
+            <div className="w-10" />
+          </header>
+        )}
+        <main className="flex-1 overflow-auto">
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/leads"
+              element={
+                <ProtectedRoute>
+                  <LeadsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/leads/:id"
+              element={
+                <ProtectedRoute>
+                  <LeadProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute>
+                  <UsersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </main>
       </div>
     </div>
   );
