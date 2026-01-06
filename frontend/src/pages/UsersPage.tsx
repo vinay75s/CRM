@@ -141,15 +141,22 @@ const UsersPage: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 text-white bg-background min-h-screen w-full">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-xl md:text-2xl font-semibold">Users</h1>
-          <p className="text-gray-400 text-sm mt-1">{total} total users</p>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+          <div>
+            <h1 className="text-xl md:text-2xl font-semibold">Users</h1>
+            <p className="text-gray-400 text-sm mt-1">{total} total users</p>
+          </div>
+
+          <Button onClick={() => setShowCreateModal(true)} className="sm:w-auto w-full">
+            <Plus className="h-4 w-4 mr-2" />
+            Add User
+          </Button>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex gap-2">
-            <div className="relative flex-1">
+          <div className="relative flex gap-2 flex-1">
+            <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="text"
@@ -157,17 +164,13 @@ const UsersPage: React.FC = () => {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="pl-9 bg-gray-800 border-gray-700 text-white"
+                className="pl-9 bg-gray-800 border-gray-700 text-white w-full"
               />
             </div>
-            <Button onClick={handleSearch} variant="secondary" size="icon">
+            <Button onClick={handleSearch} variant="secondary" size="icon" className="shrink-0">
               <Search className="h-4 w-4" />
             </Button>
           </div>
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add User
-          </Button>
         </div>
       </div>
 
@@ -178,7 +181,7 @@ const UsersPage: React.FC = () => {
       )}
 
       {/* Mobile card view */}
-      <div className="md:hidden space-y-3">
+      <div className="md:hidden space-y-4">
         {loading ? (
           <div className="p-6 text-center text-gray-400">Loading...</div>
         ) : users.length === 0 ? (
@@ -187,28 +190,30 @@ const UsersPage: React.FC = () => {
           users.map((user) => (
             <div
               key={user._id}
-              className="bg-gray-900 border border-gray-700 rounded-lg p-4"
+              className="bg-gray-900 border border-gray-700 rounded-xl p-4 shadow-sm"
             >
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="font-medium">{user.name}</h3>
-                  <p className="text-sm text-gray-400">{user.email}</p>
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-white truncate">{user.name}</h3>
+                  <p className="text-sm text-gray-400 mt-1">{user.email}</p>
+                  <p className="text-sm text-gray-500 mt-1">{user.phone || "No phone"}</p>
                 </div>
                 <span
-                  className={`px-2 py-1 rounded text-xs ${getRoleBadgeColor(user.role)}`}
+                  className={`px-2 py-1 rounded-full text-xs font-medium ml-2 shrink-0 ${getRoleBadgeColor(user.role)}`}
                 >
                   {user.role.replace("_", " ")}
                 </span>
               </div>
-              <div className="flex justify-between items-center mt-3">
-                <span className="text-sm text-gray-400">
-                  {user.phone || "No phone"}
-                </span>
+              <div className="flex justify-between items-center">
+                <div className="text-sm">
+                  <span className="text-gray-500">Assigned leads:</span>
+                  <span className="text-gray-300 ml-1 font-medium">{user.assignedLeadsCount || 0}</span>
+                </div>
                 <div className="flex gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-blue-400 hover:text-blue-300"
+                    className="text-blue-400 hover:text-blue-300 p-2"
                     onClick={() => openEditModal(user)}
                   >
                     <Edit2 className="h-4 w-4" />
@@ -216,7 +221,7 @@ const UsersPage: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-red-400 hover:text-red-300"
+                    className="text-red-400 hover:text-red-300 p-2"
                     onClick={() => handleDeleteUser(user._id)}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -299,32 +304,38 @@ const UsersPage: React.FC = () => {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex justify-center md:justify-end items-center gap-3 mt-4">
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm text-gray-400">
-            {page} / {totalPages}
-          </span>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={page === totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+        <div className="flex flex-col sm:flex-row justify-center md:justify-end items-center gap-3 mt-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="flex-1 sm:flex-none"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Prev</span>
+            </Button>
+            <span className="text-sm text-gray-400 px-2">
+              {page} / {totalPages}
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="flex-1 sm:flex-none"
+            >
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
         </div>
       )}
 
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
             <h2 className="text-xl font-semibold mb-4">Create User</h2>
             <form onSubmit={handleCreateUser} className="space-y-4">
               <div>
@@ -392,15 +403,16 @@ const UsersPage: React.FC = () => {
                   <option value="developer">Developer</option>
                 </select>
               </div>
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
                 <Button
                   type="button"
                   variant="secondary"
                   onClick={() => setShowCreateModal(false)}
+                  className="w-full sm:w-auto order-2 sm:order-1"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createLoading}>
+                <Button type="submit" disabled={createLoading} className="w-full sm:w-auto order-1 sm:order-2">
                   {createLoading ? "Creating..." : "Create"}
                 </Button>
               </div>
@@ -411,7 +423,7 @@ const UsersPage: React.FC = () => {
 
       {showEditModal && editingUser && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
             <h2 className="text-xl font-semibold mb-4">Edit User</h2>
             <form onSubmit={handleEditUser} className="space-y-4">
               <div>
@@ -466,7 +478,7 @@ const UsersPage: React.FC = () => {
                   <option value="developer">Developer</option>
                 </select>
               </div>
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-2">
                 <Button
                   type="button"
                   variant="secondary"
@@ -474,10 +486,11 @@ const UsersPage: React.FC = () => {
                     setShowEditModal(false);
                     setEditingUser(null);
                   }}
+                  className="w-full sm:w-auto order-2 sm:order-1"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={editLoading}>
+                <Button type="submit" disabled={editLoading} className="w-full sm:w-auto order-1 sm:order-2">
                   {editLoading ? "Saving..." : "Save Changes"}
                 </Button>
               </div>

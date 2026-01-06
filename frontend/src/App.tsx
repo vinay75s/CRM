@@ -17,13 +17,15 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="flex w-screen min-h-screen text-foreground bg-background">
+      {/* Sidebar - responsive: mobile overlay, desktop fixed */}
       {!isLoginPage && (
         <MenuSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       )}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Mobile header */}
+
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Mobile header - only show when sidebar is not open */}
         {!isLoginPage && (
-          <header className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 bg-background">
+          <header className="md:hidden flex items-center justify-between p-4 border-b border-gray-200 bg-background z-30 relative">
             <Button
               variant="ghost"
               size="icon"
@@ -38,6 +40,7 @@ const AppContent: React.FC = () => {
             <div className="w-10" />
           </header>
         )}
+
         <main className="flex-1 overflow-auto">
           <Routes>
             <Route path="/login" element={<LoginPage />} />

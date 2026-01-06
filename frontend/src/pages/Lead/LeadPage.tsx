@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { leadService } from "../../services/leadService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LeadFormWizard, type LeadFormData } from "@/components/LeadFormWizard";
 import type { Lead } from "@/types";
 
 const PAGE_SIZE = 10;
@@ -21,8 +20,6 @@ const LeadsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createLoading, setCreateLoading] = useState(false);
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -54,126 +51,6 @@ const LeadsPage: React.FC = () => {
     }
   };
 
-  const handleCreateLead = async (formData: LeadFormData) => {
-    setCreateLoading(true);
-    setError(null);
-    try {
-      await leadService.createLead({
-        identity: {
-          fullName: formData.identity.fullName,
-          email: formData.identity.email,
-          phone: formData.identity.phone,
-          residencyStatus: formData.identity.residencyStatus,
-          residencyDetails: formData.identity.residencyDetails,
-          discoverySource: formData.identity.discoverySource,
-          discoveryDetails: formData.identity.discoveryDetails,
-        },
-        demographics: {
-          ageGroup: formData.demographics.ageGroup,
-          professions: formData.demographics.professions,
-          householdSize: formData.demographics.householdSize,
-          annualIncomeRange: formData.demographics.annualIncomeRange,
-          notes: formData.demographics.notes,
-        },
-        propertyVision: {
-          propertiesPurchasedBefore: formData.propertyVision.propertiesPurchasedBefore,
-          propertyPurpose: formData.propertyVision.propertyPurpose,
-          propertyPurposeDetails: formData.propertyVision.propertyPurposeDetails,
-          buyingMotivation: formData.propertyVision.buyingMotivation,
-          buyingMotivationDetails: formData.propertyVision.buyingMotivationDetails,
-          shortTermRentalPreference: formData.propertyVision.shortTermRentalPreference,
-          assetTypes: formData.propertyVision.assetTypes,
-          assetTypesDetails: formData.propertyVision.assetTypesDetails,
-          waterSourcePreference: formData.propertyVision.waterSourcePreference,
-          unitConfigurations: formData.propertyVision.unitConfigurations,
-          unitConfigurationsDetails: formData.propertyVision.unitConfigurationsDetails,
-          farmlandSize: formData.propertyVision.farmlandSize,
-          farmlandSizeDetails: formData.propertyVision.farmlandSizeDetails,
-          farmlandSizeAcres: formData.propertyVision.farmlandSizeAcres,
-          farmlandVillaConfig: formData.propertyVision.farmlandVillaConfig,
-          journeyStage: formData.propertyVision.journeyStage,
-          journeyStageDetails: formData.propertyVision.journeyStageDetails,
-          explorationDuration: formData.propertyVision.explorationDuration,
-          explorationDurationDetails: formData.propertyVision.explorationDurationDetails,
-          purchaseTimeline: formData.propertyVision.purchaseTimeline,
-          purchaseTimelineDetails: formData.propertyVision.purchaseTimelineDetails,
-          budgetRange: formData.propertyVision.budgetRange,
-          budgetRangeDetails: formData.propertyVision.budgetRangeDetails,
-          notes: formData.propertyVision.notes,
-        },
-        investmentPreferences: {
-          ownershipStructure: formData.investmentPreferences.ownershipStructure,
-          ownershipStructureDetails: formData.investmentPreferences.ownershipStructureDetails,
-          possessionTimeline: formData.investmentPreferences.possessionTimeline,
-          possessionTimelineDetails: formData.investmentPreferences.possessionTimelineDetails,
-          managementModel: formData.investmentPreferences.managementModel,
-          managementModelDetails: formData.investmentPreferences.managementModelDetails,
-          fundingType: formData.investmentPreferences.fundingType,
-          fundingTypeDetails: formData.investmentPreferences.fundingTypeDetails,
-          notes: formData.investmentPreferences.notes,
-        },
-        locationPreferences: {
-          currentLocation: {
-            city: formData.locationPreferences.currentCity,
-            state: formData.locationPreferences.currentState,
-            country: formData.locationPreferences.currentCountry,
-          },
-          buyingRegions: formData.locationPreferences.buyingRegions,
-          preferredCountries: formData.locationPreferences.preferredCountries,
-          preferredStates: formData.locationPreferences.preferredStates,
-          preferredCities: formData.locationPreferences.preferredCities,
-          preferredCitiesDetails: formData.locationPreferences.preferredCitiesDetails,
-          climateRisksToAvoid: formData.locationPreferences.climateRisksToAvoid,
-          climatePreference: formData.locationPreferences.climatePreference,
-          climatePreferenceDetails: formData.locationPreferences.climatePreferenceDetails,
-          locationPriorities: formData.locationPreferences.locationPriorities,
-          locationPrioritiesDetails: formData.locationPreferences.locationPrioritiesDetails,
-          expansionRadiusKm: formData.locationPreferences.expansionRadiusKm,
-          expansionRadiusDetails: formData.locationPreferences.expansionRadiusDetails,
-          notes: formData.locationPreferences.notes,
-        },
-        lifestylePreferences: {
-          areaType: formData.lifestylePreferences.areaType,
-          areaTypeDetails: formData.lifestylePreferences.areaTypeDetails,
-          energyPreference: formData.lifestylePreferences.energyPreference,
-          energyPreferenceDetails: formData.lifestylePreferences.energyPreferenceDetails,
-          natureFeature: formData.lifestylePreferences.natureFeature,
-          natureFeatureDetails: formData.lifestylePreferences.natureFeatureDetails,
-          terrainPreference: formData.lifestylePreferences.terrainPreference,
-          terrainPreferenceDetails: formData.lifestylePreferences.terrainPreferenceDetails,
-          viewPreferences: formData.lifestylePreferences.viewPreferences,
-          viewPreferencesDetails: formData.lifestylePreferences.viewPreferencesDetails,
-          communityFormat: formData.lifestylePreferences.communityFormat,
-          communityFormatDetails: formData.lifestylePreferences.communityFormatDetails,
-          gatedPreference: formData.lifestylePreferences.gatedPreference,
-          communityFriendlyFor: formData.lifestylePreferences.communityFriendlyFor,
-          communityFriendlyForDetails: formData.lifestylePreferences.communityFriendlyForDetails,
-          outdoorAmenities: formData.lifestylePreferences.outdoorAmenities,
-          notes: formData.lifestylePreferences.notes,
-        },
-        unitPreferences: {
-          vastuDirections: formData.unitPreferences.vastuDirections,
-          furnishingLevel: formData.unitPreferences.furnishingLevel,
-          furnishingLevelDetails: formData.unitPreferences.furnishingLevelDetails,
-          interiorStyle: formData.unitPreferences.interiorStyle,
-          interiorStyleDetails: formData.unitPreferences.interiorStyleDetails,
-          smartHomeFeatures: formData.unitPreferences.smartHomeFeatures,
-          smartHomeFeaturesDetails: formData.unitPreferences.smartHomeFeaturesDetails,
-          mustHaveFeatures: formData.unitPreferences.mustHaveFeatures,
-          mustHaveFeaturesDetails: formData.unitPreferences.mustHaveFeaturesDetails,
-          notes: formData.unitPreferences.notes,
-        },
-        dreamHomeNotes: formData.dreamHomeNotes,
-      });
-      setShowCreateModal(false);
-      fetchLeads();
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to create lead");
-      throw err;
-    } finally {
-      setCreateLoading(false);
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -202,15 +79,18 @@ const LeadsPage: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 text-white bg-background min-h-screen w-full">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-xl md:text-2xl font-semibold">Leads</h1>
-          <p className="text-gray-400 text-sm mt-1">{total} total leads</p>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+          <div>
+            <h1 className="text-xl md:text-2xl font-semibold">Leads</h1>
+            <p className="text-gray-400 text-sm mt-1">{total} total leads</p>
+          </div>
+
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex gap-2">
-            <div className="relative flex-1">
+          <div className="relative flex gap-2 flex-1">
+            <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="text"
@@ -218,17 +98,13 @@ const LeadsPage: React.FC = () => {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="pl-9 bg-gray-800 border-gray-700 text-white"
+                className="pl-9 bg-gray-800 border-gray-700 text-white w-full"
               />
             </div>
-            <Button onClick={handleSearch} variant="secondary" size="icon">
+            <Button onClick={handleSearch} variant="secondary" size="icon" className="shrink-0">
               <Search className="h-4 w-4" />
             </Button>
           </div>
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Lead
-          </Button>
         </div>
       </div>
 
@@ -239,7 +115,7 @@ const LeadsPage: React.FC = () => {
       )}
 
       {/* Mobile card view */}
-      <div className="md:hidden space-y-3">
+      <div className="md:hidden space-y-4">
         {loading ? (
           <div className="p-6 text-center text-gray-400">Loading...</div>
         ) : leads.length === 0 ? (
@@ -249,23 +125,36 @@ const LeadsPage: React.FC = () => {
             <div
               key={lead._id}
               onClick={() => navigate(`/leads/${lead._id}`)}
-              className="bg-gray-900 border border-gray-700 rounded-lg p-4 cursor-pointer active:bg-gray-800"
+              className="bg-gray-900 border border-gray-700 rounded-xl p-4 cursor-pointer active:bg-gray-800 hover:bg-gray-800/50 transition-colors shadow-sm"
             >
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="font-medium">{lead.identity.fullName}</h3>
-                  <p className="text-sm text-gray-400">{lead.identity.phone}</p>
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-white truncate">{lead.identity.fullName}</h3>
+                  <p className="text-sm text-gray-400 mt-1">{lead.identity.phone}</p>
+                  <p className="text-sm text-gray-500 mt-1">{lead.identity.email || "No email"}</p>
                 </div>
-                <span className={`px-2 py-1 rounded text-xs ${getStatusColor(lead.system.leadStatus)}`}>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ml-2 shrink-0 ${getStatusColor(lead.system.leadStatus)}`}>
                   {lead.system.leadStatus}
                 </span>
               </div>
-              <div className="flex justify-between items-center mt-3 text-sm">
-                <span className="text-gray-400">{lead.propertyVision.budgetRange || "-"}</span>
-                <span className="text-gray-400">
-                  {lead.system.assignedAgent?.name || "Unassigned"}
-                </span>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-gray-500">Budget:</span>
+                  <p className="text-gray-300 font-medium">{lead.propertyVision.budgetRange || "-"}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Agent:</span>
+                  <p className="text-gray-300 font-medium truncate">
+                    {lead.system.assignedAgent?.name || "Unassigned"}
+                  </p>
+                </div>
               </div>
+              {lead.propertyVision.journeyStage && (
+                <div className="mt-3 pt-3 border-t border-gray-700">
+                  <span className="text-gray-500 text-sm">Stage:</span>
+                  <p className="text-gray-300 font-medium">{lead.propertyVision.journeyStage}</p>
+                </div>
+              )}
             </div>
           ))
         )}
@@ -324,36 +213,35 @@ const LeadsPage: React.FC = () => {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex justify-center md:justify-end items-center gap-3 mt-4">
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm text-gray-400">
-            {page} / {totalPages}
-          </span>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={page === totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+        <div className="flex flex-col sm:flex-row justify-center md:justify-end items-center gap-3 mt-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="flex-1 sm:flex-none"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Prev</span>
+            </Button>
+            <span className="text-sm text-gray-400 px-2">
+              {page} / {totalPages}
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="flex-1 sm:flex-none"
+            >
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
         </div>
       )}
 
-      {showCreateModal && (
-        <LeadFormWizard
-          onSubmit={handleCreateLead}
-          onCancel={() => setShowCreateModal(false)}
-          loading={createLoading}
-        />
-      )}
     </div>
   );
 };
