@@ -52,16 +52,19 @@ export const LeadCreate = async (req: AuthRequest, res: Response) => {
 
     const lead = await Lead.create({
       identity,
-      profile,
-      demographics,
-      buyerProfile,
-      assetPreferences,
-      purchaseReadiness,
-      ownershipPreferences,
-      locationProfile,
+      demographics: profile,
+      propertyVision: {
+        ...buyerProfile,
+        ...purchaseReadiness,
+      },
+      investmentPreferences: ownershipPreferences,
+      locationPreferences: {
+        ...assetPreferences,
+        ...locationProfile,
+      },
       lifestylePreferences,
       unitPreferences,
-      notes,
+      dreamHomeNotes: notes,
       system: {
         ...system,
         assignedAgent: agentId,
