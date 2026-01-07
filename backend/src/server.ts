@@ -12,6 +12,8 @@ import fs from "fs";
 
 import path from "path";
 import { fileURLToPath } from "url";
+import { authenticateToken, requireRole } from "./middlewares/auth.js";
+import { Role } from "./models/User.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,7 +56,12 @@ app.use((req, res, next) => {
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/leads", leadRoutes);
+app.use(
+  "/api/leads",
+  authenticateToken,
+  requireRole([Role.Admin, Role.salesAgent]),
+  leadRoutes
+);
 app.use("/api/users", userRoutes);
 
 // Health check
