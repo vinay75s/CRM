@@ -9,7 +9,7 @@ import {
   RelatedEntity,
 } from "../models/Notification.js";
 import type { AuthRequest, AuthUser } from "../middlewares/auth.js";
-import { leadZodSchema, type LeadInput } from "@/types/Lead.zod.js";
+import { leadZodSchema } from "@/types/Lead.zod.js";
 import Lead from "@/models/Lead.js";
 import mongoose from "mongoose";
 
@@ -64,15 +64,17 @@ export async function createLeadController(req: Request, res: Response) {
 export const updateLeadController = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    console.log("id enter update controller");
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    // Validate ID
+    if (id && !mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid lead ID format",
+        message: "Invalid lead ID",
       });
     }
 
-    // Find the lead
+    // Find lead
     const lead = await Lead.findById(id);
     if (!lead) {
       return res.status(404).json({
@@ -81,179 +83,76 @@ export const updateLeadController = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Check role-based access
+    // Check sales agent access
     if (req.user?.role === Role.salesAgent) {
-      // Sales agents can only update their own assigned leads
-      if (!lead.system?.assignedAgent || 
-          lead.system.assignedAgent.toString() !== req.user.userId) {
+      const isAssigned = lead.system?.assignedAgent?.toString() === req.user.id;
+      if (!isAssigned) {
         return res.status(403).json({
           success: false,
-          message: "Access denied. You can only update leads assigned to you.",
+          message: "You can only update leads assigned to you",
+        });
+      }
+
+      // Prevent agents from changing assignedAgent
+      if (req.body.system?.assignedAgent) {
+        return res.status(403).json({
+          success: false,
+          message: "You cannot change assigned agent",
         });
       }
     }
 
-    // Validate the update data
+    // Validate update data
     const validationResult = leadZodSchema.partial().safeParse(req.body);
-    
     if (!validationResult.success) {
       return res.status(400).json({
         success: false,
         message: "Validation failed",
-        errors: validationResult.error.errors,
+        errors: validationResult.error,
       });
     }
 
-    const updateData = validationResult.data;
-
-    // Define role-based field restrictions
-    const restrictedFields = {
-      [Role.salesAgent]: [
-        // Cannot modify these fields
-        "identity.firstName",
-        "identity.lastName",
-        "identity.email",
-        "identity.phone",
-        "identity.homeCountry",
-        "identity.taxResidencyCountry",
-        "identity.visaResidencyStatus",
-        "identity.leadSource",
-        "identity.ageYears",
-        "identity.profession",
-        "identity.householdSize",
-        "identity.householdIncomeBandInr",
-        "identity.priorPropertiesPurchased",
-        "identity.propertyRolePrimary",
-        "identity.searchTrigger",
-        "identity.buyingJourneyStage",
-        "identity.explorationDuration",
-        "identity.purchaseTimeline",
-        "system.assignedAgent",
-      ],
-      [Role.salesManager]: [
-        // Can update all fields except system.assignedAgent
-        "system.assignedAgent"
-      ],
-      [Role.admin]: [
-        // Admin can update everything - no restrictions
-      ]
-    };
-
-    // Check for restricted field updates based on role
-    if (req.user?.role && restrictedFields[req.user.role]) {
-      const attemptedUpdates = getNestedFieldPaths(req.body);
-      const restricted = restrictedFields[req.user.role];
-      
-      const unauthorizedUpdates = attemptedUpdates.filter(field => 
-        restricted.some(restrictedField => 
-          field === restrictedField || field.startsWith(restrictedField.split('.')[0] + '.')
-        )
-      );
-
-      if (unauthorizedUpdates.length > 0) {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied. You cannot update the following fields:",
-          restrictedFields: unauthorizedUpdates,
-        });
-      }
-    }
-
-    // Apply the updates
-    const updateObject: any = {};
-
-    // Update identity fields
-    if (updateData.identity) {
-      Object.entries(updateData.identity).forEach(([key, value]) => {
-        updateObject[`identity.${key}`] = value;
-      });
-    }
-
-    // Update location fields
-    if (updateData.location) {
-      Object.entries(updateData.location).forEach(([key, value]) => {
-        updateObject[`location.${key}`] = value;
-      });
-    }
-
-    // Update property fields
-    if (updateData.property) {
-      Object.entries(updateData.property).forEach(([key, value]) => {
-        updateObject[`property.${key}`] = value;
-      });
-    }
-
-    // Update system fields
-    if (updateData.system) {
-      Object.entries(updateData.system).forEach(([key, value]) => {
-        updateObject[`system.${key}`] = value;
-      });
-    }
-
-    // Update the lead
+    // Update lead
     const updatedLead = await Lead.findByIdAndUpdate(
       id,
-      { $set: updateObject },
+      { $set: req.body },
       { new: true, runValidators: true }
-    )
-      .populate("system.assignedAgent", "name email phone")
-      .lean();
-
-    // Create audit log (optional)
-    // await createAuditLog({
-    //   userId: req.user?.userId,
-    //   action: "UPDATE_LEAD",
-    //   entityType: "Lead",
-    //   entityId: id,
-    //   changes: updateObject,
-    //   ipAddress: req.ip,
-    //   userAgent: req.get("user-agent"),
-    // });
+    ).populate("system.assignedAgent", "name email phone");
 
     return res.status(200).json({
       success: true,
       message: "Lead updated successfully",
       data: updatedLead,
     });
+  } catch (error: any) {
+    console.error("Update lead error:", error);
 
-  } catch (error) {
-    console.error("Error updating lead:", error);
-    
-    // Handle duplicate key errors
     if (error.code === 11000) {
-      const field = Object.keys(error.keyPattern)[0];
       return res.status(409).json({
         success: false,
-        message: `Duplicate value for ${field}`,
-      });
-    }
-
-    // Handle validation errors
-    if (error.name === "ValidationError") {
-      return res.status(400).json({
-        success: false,
-        message: "Validation error",
-        errors: Object.values(error.errors).map((err: any) => err.message),
+        message: "Duplicate value error",
       });
     }
 
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
-
 // Helper function to get all nested field paths
 function getNestedFieldPaths(obj: any, prefix = ""): string[] {
   const paths: string[] = [];
-  
+
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
       const path = prefix ? `${prefix}.${key}` : key;
-      
-      if (typeof obj[key] === "object" && obj[key] !== null && !Array.isArray(obj[key])) {
+
+      if (
+        typeof obj[key] === "object" &&
+        obj[key] !== null &&
+        !Array.isArray(obj[key])
+      ) {
         // Recursively get nested paths
         paths.push(...getNestedFieldPaths(obj[key], path));
       } else {
@@ -261,7 +160,7 @@ function getNestedFieldPaths(obj: any, prefix = ""): string[] {
       }
     }
   }
-  
+
   return paths;
 }
 
@@ -352,7 +251,10 @@ export const getAllLeadsController = async (req: Request, res: Response) => {
   }
 };
 
-export const getLeadByIdController = async (req: AuthRequest, res: Response) => {
+export const getLeadByIdController = async (
+  req: AuthRequest,
+  res: Response
+) => {
   const { id } = req.params;
   if (id && !mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({
@@ -413,8 +315,10 @@ export const deleteLeadController = async (req: AuthRequest, res: Response) => {
   }
 };
 
-
-export const updateLeadStatusController = async (req: AuthRequest, res: Response) => {
+export const updateLeadStatusController = async (
+  req: AuthRequest,
+  res: Response
+) => {
   try {
     const { id } = req.params;
     const { leadStatus, notes } = req.body;
@@ -446,8 +350,10 @@ export const updateLeadStatusController = async (req: AuthRequest, res: Response
     // Check role-based access
     if (req.user?.role === Role.salesAgent) {
       // Sales agents can only update their own assigned leads
-      if (!lead.system?.assignedAgent || 
-          lead.system.assignedAgent.toString() !== req.user.userId) {
+      if (
+        !lead.system?.assignedAgent ||
+        lead.system.assignedAgent.toString() !== req.user.userId
+      ) {
         return res.status(403).json({
           success: false,
           message: "Access denied. You can only update leads assigned to you.",
@@ -460,19 +366,19 @@ export const updateLeadStatusController = async (req: AuthRequest, res: Response
 
     // Update lead status
     lead.system.leadStatus = leadStatus;
-    
+
     // Add status change notes if provided
     if (notes) {
       if (!lead.system.statusHistory) {
         lead.system.statusHistory = [];
       }
-      
+
       lead.system.statusHistory.push({
         fromStatus: oldStatus,
         toStatus: leadStatus,
         changedBy: req.user?.userId,
         changedAt: new Date(),
-        notes: notes
+        notes: notes,
       });
     }
 
@@ -494,8 +400,8 @@ export const updateLeadStatusController = async (req: AuthRequest, res: Response
     // Create notification for admin/sales manager
     if (req.user?.role !== Role.admin && req.user?.role !== Role.salesManager) {
       // Find admin/sales manager to notify
-      const admins = await User.find({ 
-        role: { $in: [Role.admin, Role.salesManager] } 
+      const admins = await User.find({
+        role: { $in: [Role.admin, Role.salesManager] },
       }).select("_id");
 
       for (const admin of admins) {
@@ -521,7 +427,6 @@ export const updateLeadStatusController = async (req: AuthRequest, res: Response
         updatedAt: lead.updatedAt,
       },
     });
-
   } catch (error) {
     console.error("Error updating lead status:", error);
     return res.status(500).json({
@@ -531,7 +436,6 @@ export const updateLeadStatusController = async (req: AuthRequest, res: Response
     });
   }
 };
-
 export const assignAgentToLeadController = async (
   req: AuthRequest,
   res: Response
@@ -541,27 +445,35 @@ export const assignAgentToLeadController = async (
 
   try {
     if (!agentId) {
-      res.status(400).json({ message: "Agent ID is required" });
-      return;
+      return res.status(400).json({ message: "Agent ID is required" });
     }
 
     const lead = await Lead.findById(leadId);
     if (!lead) {
-      res.status(404).json({ message: "Lead not found" });
-      return;
+      return res.status(404).json({ message: "Lead not found" });
     }
 
     if (req.user?.role === Role.salesAgent) {
-      res.status(403).json({ message: "Access denied" });
-      return;
+      return res.status(403).json({ message: "Access denied" });
     }
 
     const oldAgent = lead.system?.assignedAgent?.toString();
+
+    // METHOD 1: Direct assignment with type assertion (Your current approach)
     if (!lead.system) {
-      lead.system = { assignedAgent: agentId, leadStatus: LeadStatus.New };
+      // Create minimal system object
+      lead.system = {
+        assignedAgent: agentId,
+        leadStatus: LeadStatus.New,
+      } as any; // This is fine for runtime
     } else {
+      // Just update the assignedAgent
       lead.system.assignedAgent = agentId;
     }
+
+    // Tell Mongoose this nested object was modified
+    lead.markModified("system");
+
     await lead.save();
 
     if (agentId !== oldAgent) {
@@ -576,55 +488,14 @@ export const assignAgentToLeadController = async (
       });
     }
 
-    res.status(200).json({ message: "Agent assigned to lead", data: lead });
+    return res.status(200).json({
+      message: "Agent assigned to lead",
+      data: lead,
+    });
   } catch (error) {
     console.error("Assign agent error:", error);
+    console.error("Error details:", {});
     res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-export const convertLeadToCustomer = async (
-  req: AuthRequest,
-  res: Response
-) => {
-  const { id } = req.params;
-
-  try {
-    const lead = await Lead.findById(id);
-    if (!lead) {
-      res.status(404).json({ message: "Lead not found" });
-      return;
-    }
-
-    if (lead.system?.leadStatus === LeadStatus.Converted) {
-      res.status(400).json({ message: "Lead already converted" });
-      return;
-    }
-
-    if (!lead.system) {
-      lead.system = { leadStatus: LeadStatus.Converted };
-    } else {
-      lead.system.leadStatus = LeadStatus.Converted;
-    }
-    await lead.save();
-
-    if (lead.system?.assignedAgent) {
-      await createNotification({
-        recipient: lead.system.assignedAgent,
-        type: NotificationType.StatusUpdate,
-        title: "Lead Converted",
-        message: `Lead ${lead.} ${lead.lastName} has been converted`,
-        relatedEntity: RelatedEntity.Lead,
-        relatedEntityId: lead._id,
-        isRead: false,
-      });
-    }
-
-    res
-      .status(200)
-      .json({ message: "Lead converted successfully", data: lead });
-  } catch (error) {
-    console.error("Convert lead error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    return;
   }
 };

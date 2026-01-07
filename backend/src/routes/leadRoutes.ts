@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
   assignAgentToLeadController,
-  convertLeadToCustomer,
   createLeadController,
   deleteLeadController,
   getAllLeadsController,
@@ -24,11 +23,7 @@ router.post("/test", (req, res) => {
 router.post("/", createLeadController);
 
 // Get all leads with filters
-router.get(
-  "/",
-
-  getAllLeadsController
-);
+router.get("/", getAllLeadsController);
 
 // Get lead by ID
 router.get("/:id", getLeadByIdController);
@@ -49,11 +44,11 @@ router.patch(
 // Delete lead (admin only)
 router.delete("/:id", requireRole([Role.Admin]), deleteLeadController);
 
-router.post(
-  "/:id/convert",
-  authenticateToken,
-  requireRole([Role.Admin]),
-  convertLeadToCustomer as any
-);
+// router.post(
+//   "/:id/convert",
+//   authenticateToken,
+//   requireRole([Role.Admin]),
+//   convertLeadToCustomer as any
+// );
 
 export default router;

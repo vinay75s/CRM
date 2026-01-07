@@ -28,6 +28,7 @@ export const authenticateToken = (
   next: NextFunction
 ): void => {
   try {
+    console.log("token authetticaticteing", req.session);
     if (!req.session?.userId) {
       res.status(401).json({ error: "Not authenticated" });
       return;
@@ -40,6 +41,7 @@ export const authenticateToken = (
       name: req.session.userName,
     };
     console.log("going next", req.user);
+
     next();
   } catch (error) {
     res.status(401).json({ error: "Authentication failed" });
