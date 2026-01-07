@@ -14,178 +14,62 @@ export interface PaginatedResponse<T> {
 }
 
 export interface CreateLeadData {
-  identity: {
-    fullName: string;
-    email: string;
-    phone: string;
-    residencyStatus?: string;
-    residencyDetails?: string;
-    discoverySource?: string;
-    discoveryDetails?: string;
-  };
-  demographics?: {
-    ageGroup?: string;
-    professions?: string[];
-    householdSize?: string;
-    annualIncomeRange?: string;
-    notes?: string;
-  };
-  propertyVision?: {
-    propertiesPurchasedBefore?: string;
-    propertyPurpose?: string[];
-    propertyPurposeDetails?: string;
-    buyingMotivation?: string[];
-    buyingMotivationDetails?: string;
-    shortTermRentalPreference?: string;
-    assetTypes?: string[];
-    assetTypesDetails?: string;
-    waterSourcePreference?: string;
-    unitConfigurations?: string[];
-    unitConfigurationsDetails?: string;
-    farmlandSize?: string;
-    farmlandSizeDetails?: string;
-    farmlandSizeAcres?: number;
-    farmlandVillaConfig?: string;
-    journeyStage?: string;
-    journeyStageDetails?: string;
-    explorationDuration?: string;
-    explorationDurationDetails?: string;
-    purchaseTimeline?: string;
-    purchaseTimelineDetails?: string;
-    budgetRange?: string;
-    budgetRangeDetails?: string;
-    notes?: string;
-  };
-  investmentPreferences?: {
-    ownershipStructure?: string;
-    ownershipStructureDetails?: string;
-    possessionTimeline?: string;
-    possessionTimelineDetails?: string;
-    managementModel?: string;
-    managementModelDetails?: string;
-    fundingType?: string;
-    fundingTypeDetails?: string;
-    notes?: string;
-  };
-  locationPreferences?: {
-    currentLocation?: {
-      city?: string;
-      state?: string;
-      country?: string;
-    };
-    buyingRegions?: string[];
-    preferredCountries?: string[];
-    preferredStates?: string[];
-    preferredCities?: string[];
-    preferredCitiesDetails?: string;
-    climateRisksToAvoid?: string[];
-    climatePreference?: string[];
-    climatePreferenceDetails?: string;
-    locationPriorities?: string[];
-    locationPrioritiesDetails?: string;
-    expansionRadiusKm?: string;
-    expansionRadiusDetails?: string;
-    notes?: string;
-  };
-  lifestylePreferences?: {
-    areaType?: string[];
-    areaTypeDetails?: string;
-    energyPreference?: string[];
-    energyPreferenceDetails?: string;
-    natureFeature?: string[];
-    natureFeatureDetails?: string;
-    terrainPreference?: string[];
-    terrainPreferenceDetails?: string;
-    viewPreferences?: string[];
-    viewPreferencesDetails?: string;
-    communityFormat?: string;
-    communityFormatDetails?: string;
-    gatedPreference?: string;
-    communityFriendlyFor?: string[];
-    communityFriendlyForDetails?: string;
-    outdoorAmenities?: string[];
-    notes?: string;
-  };
-  unitPreferences?: {
-    vastuDirections?: string[];
-    furnishingLevel?: string;
-    furnishingLevelDetails?: string;
-    interiorStyle?: string;
-    interiorStyleDetails?: string;
-    smartHomeFeatures?: string[];
-    smartHomeFeaturesDetails?: string;
-    mustHaveFeatures?: string[];
-    mustHaveFeaturesDetails?: string;
-    notes?: string;
-  };
-  dreamHomeNotes?: string;
-  system?: {
-    assignedAgent?: string;
-  };
-  buyerProfile?: {
-    propertiesPurchasedBefore?: number;
-    propertyPurpose?: string[];
-    propertyPurposeDetails?: string;
-    buyingMotivation?: string[];
-    buyingMotivationDetails?: string;
-    shortTermRentalPreference?: string;
-    assetTypes?: string[];
-    assetTypesDetails?: string;
-    waterSourcePreference?: string;
-    unitConfigurations?: string[];
-    unitConfigurationsDetails?: string;
-    farmlandSize?: string;
-    farmlandSizeDetails?: string;
-    farmlandSizeAcres?: number;
-    farmlandVillaConfig?: string;
-    journeyStage?: string;
-    journeyStageDetails?: string;
-    explorationDuration?: string;
-    explorationDurationDetails?: string;
-    purchaseTimeline?: string;
-    purchaseTimelineDetails?: string;
-    budgetRange?: string;
-    budgetRangeDetails?: string;
-    notes?: string;
-  };
-  assetPreferences?: {
-    currentLocation?: {
-      city?: string;
-      state?: string;
-      country?: string;
-    };
-    buyingRegions?: string[];
-    preferredCountries?: string[];
-    preferredStates?: string[];
-    preferredCities?: string[];
-    preferredCitiesDetails?: string;
-    climateRisksToAvoid?: string[];
-    climatePreference?: string[];
-    climatePreferenceDetails?: string;
-    locationPriorities?: string[];
-    locationPrioritiesDetails?: string;
-    expansionRadiusKm?: string;
-    expansionRadiusDetails?: string;
-    notes?: string;
-  };
-  purchaseReadiness?: {
-    journeyStage?: string;
-    purchaseTimeline?: string;
-    budgetRange?: string;
-  };
-  ownershipPreferences?: {
-    ownershipStructure?: string;
-    fundingType?: string;
-  };
-  locationProfile?: {
-    currentLocation?: {
-      city?: string;
-      state?: string;
-      country?: string;
-    };
-    buyingRegions?: string[];
-    preferredCities?: string[];
-  };
+  firstName: string;
+  lastName?: string;
+  phone?: string;
+  email: string;
+  homeCountry?: string;
+  taxResidencyCountry?: string;
+  visaResidencyStatus?: string;
+  leadSource?: string;
+  ageYears?: number;
+  profession?: string;
+  householdSize?: string;
+  householdIncomeBandInr?: string;
+  priorPropertiesPurchased?: string;
+  propertyRolePrimary?: string[];
+  searchTrigger?: string[];
+  buyingJourneyStage?: string;
+  explorationDuration?: string;
+  purchaseTimeline?: string;
+  totalBudgetBandInr?: string;
+  propertyVisionNotes?: string;
+  aboutYouNotes?: string;
+  ownershipTimelineNotes?: string;
+  locationDealbreakerNotes?: string;
+  finalNotes?: string;
+  currentHomeCity?: string;
+  currentHomeState?: string;
+  currentHomeCountry?: string;
+  buyingCountryFocus?: string;
+  targetStatesRegions?: string[];
+  climateRiskAvoidance?: string[];
+  targetLocations?: string[];
+  preferredClimate?: string[];
+  locationPriorities?: string[];
+  areaTypePreference?: string[];
+  naturalFeatureClosest?: string[];
+  strPermissionImportance?: string;
+  assetTypeInterest?: string[];
+  farmlandWaterSourcePreference?: string;
+  unitConfiguration?: string[];
+  farmlandLandSizeBucket?: string[];
+  ownershipStructurePreference?: string;
+  possessionStagePreference?: string;
+  possessionTimelineBucket?: string;
+  managementModelPreference?: string;
+  fundingPreference?: string;
+  communityFormatPreference?: string;
+  communityFriendlyFor?: string[];
+  communityOutdoorAmenitiesTop?: string[];
+  vastuPreferredDirections?: string[];
+  furnishingLevelPreference?: string;
+  homeMustHaveFeatures?: string[];
+  homeNiceToHaveFeatures?: string[];
+  interiorFinishLevel?: string;
+  smartHomeSecurityFeatures?: string[];
+  privateOutdoorFeatures?: string[];
+  idealHomeNotes?: string;
 }
 
 export const leadService = {

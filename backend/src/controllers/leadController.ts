@@ -19,53 +19,31 @@ const getAgentIdForLead = (user?: AuthUser | null): string | null => {
 
 export const LeadCreate = async (req: AuthRequest, res: Response) => {
   console.log("LeadCreate called with body:", req.body);
-  const {
-    identity,
-    demographics,
-    propertyVision,
-    investmentPreferences,
-    locationPreferences,
-    lifestylePreferences,
-    unitPreferences,
-    dreamHomeNotes,
-    system,
-  } = req.body;
+  const data = req.body;
 
-  if (!identity?.fullName || !identity?.email) {
-    res
-      .status(400)
-      .json({ message: "identity.fullName and identity.email are required" });
+  // Only firstName and email are required
+  if (!data.firstName || !data.email) {
+    res.status(400).json({ message: "firstName and email are required" });
     return;
   }
 
   try {
-    const existingLead = await Lead.findOne({
-      $or: [
-        { "identity.email": identity.email },
-        ...(identity.phone ? [{ "identity.phone": identity.phone }] : []),
-      ],
-    });
+    // Check for duplicate by email
+    const existingLead = await Lead.findOne({ email: data.email });
 
     if (existingLead) {
       res.status(409).json({
         success: false,
-        message: "Lead already exists with this phone or email",
+        message: "Lead already exists with this email",
         data: existingLead,
       });
       return;
     }
 
-    const agentId = system?.assignedAgent || getAgentIdForLead(req.user);
+    const agentId = data.system?.assignedAgent || getAgentIdForLead(req.user);
 
     const leadData = {
-      identity,
-      demographics,
-      propertyVision,
-      investmentPreferences,
-      locationPreferences,
-      lifestylePreferences,
-      unitPreferences,
-      dreamHomeNotes,
+      ...data,
       system: {
         leadStatus: LeadStatus.New,
         assignedAgent: agentId,
@@ -84,93 +62,6 @@ export const LeadCreate = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error("Error in LeadCreate:", error);
     res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-/**
- * Create Lead
- * - Accepts partial payload (webhook or manual)
- * - Prevents duplicate leads by phone/email
- * - Does NOT enforce required fields (except identity uniqueness)
- */
-export const createLeadGPT = async (req: AuthRequest, res: Response) => {
-  try {
-    const payload = req.body;
-
-    // ----------------------------
-    // 1. Basic safety check
-    // ----------------------------
-    if (!payload?.identity?.phone && !payload?.identity?.email) {
-      return res.status(400).json({
-        success: false,
-        message: "At least phone or email is required to create a lead",
-      });
-    }
-
-    // ----------------------------
-    // 2. Normalize identity
-    // ----------------------------
-    if (payload.identity?.email) {
-      payload.identity.email = payload.identity.email.toLowerCase().trim();
-    }
-
-    if (payload.identity?.phone) {
-      payload.identity.phone = payload.identity.phone.trim();
-    }
-
-    // ----------------------------
-    // 3. Duplicate check
-    // ----------------------------
-    const existingLead = await Lead.findOne({
-      $or: [
-        { "identity.phone": payload.identity.phone },
-        { "identity.email": payload.identity.email },
-      ],
-    });
-
-    if (existingLead) {
-      return res.status(409).json({
-        success: false,
-        message: "Lead already exists",
-        data: existingLead,
-      });
-    }
-
-    // ----------------------------
-    // 4. Auto system fields
-    // ----------------------------
-    payload.system = {
-      ...payload.system,
-      leadStatus: payload.system?.leadStatus || "New",
-      assignedAgent: payload.system?.assignedAgent || req.user?.id,
-    };
-
-    // ----------------------------
-    // 5. Create lead
-    // ----------------------------
-    const lead = await Lead.create(payload);
-
-    return res.status(201).json({
-      success: true,
-      message: "Lead created successfully",
-      data: lead,
-    });
-  } catch (error: any) {
-    console.error("Create Lead Error:", error);
-
-    // Handle Mongo duplicate key error
-    if (error.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        message: "Duplicate lead detected",
-        error: error.keyValue,
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to create lead",
-    });
   }
 };
 
@@ -206,9 +97,7 @@ export const updateLeadController = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    res
-      .status(200)
-      .json({ message: "Lead updated successfully", data: updatedLead });
+    res.status(200).json({ message: "Lead updated successfully", data: updatedLead });
   } catch (e) {
     console.error("Error in update lead:", e);
     res.status(500).json({ message: "Internal server error" });
@@ -223,15 +112,16 @@ export const getAllLeads = async (req: AuthRequest, res: Response) => {
     const search = req.query.search;
 
     const filter: Record<string, unknown> = {};
-    console.log("get all leads ");
+
     if (req.user?.role === Role.salesAgent) {
       filter["system.assignedAgent"] = req.user.id;
     }
     if (search) {
       filter.$or = [
-        { "identity.fullName": { $regex: search, $options: "i" } },
-        { "identity.email": { $regex: search, $options: "i" } },
-        { "identity.phone": { $regex: search, $options: "i" } },
+        { firstName: { $regex: search, $options: "i" } },
+        { lastName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -262,10 +152,7 @@ export const getLeadById = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
 
   try {
-    const lead = await Lead.findById(id).populate(
-      "system.assignedAgent",
-      "name email"
-    );
+    const lead = await Lead.findById(id).populate("system.assignedAgent", "name email");
 
     if (!lead) {
       res.status(404).json({ message: "Lead not found" });
@@ -287,10 +174,34 @@ export const getLeadById = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const assignAgentToLeadController = async (
-  req: AuthRequest,
-  res: Response
-) => {
+export const deleteLead = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const lead = await Lead.findById(id);
+    if (!lead) {
+      res.status(404).json({ message: "Lead not found" });
+      return;
+    }
+
+    if (
+      req.user?.role === Role.salesAgent &&
+      lead.system?.assignedAgent?.toString() !== req.user.id
+    ) {
+      res.status(403).json({ message: "Access denied" });
+      return;
+    }
+
+    await Lead.findByIdAndDelete(id);
+
+    res.status(200).json({ message: "Lead deleted successfully" });
+  } catch (error) {
+    console.error("Delete lead error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const assignAgentToLeadController = async (req: AuthRequest, res: Response) => {
   const { leadId } = req.params;
   const { agentId } = req.body;
 
@@ -338,37 +249,7 @@ export const assignAgentToLeadController = async (
   }
 };
 
-export const deleteLead = async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
-
-  try {
-    const lead = await Lead.findById(id);
-    if (!lead) {
-      res.status(404).json({ message: "Lead not found" });
-      return;
-    }
-
-    if (
-      req.user?.role === Role.salesAgent &&
-      lead.system?.assignedAgent?.toString() !== req.user.id
-    ) {
-      res.status(403).json({ message: "Access denied" });
-      return;
-    }
-
-    await Lead.findByIdAndDelete(id);
-
-    res.status(200).json({ message: "Lead deleted successfully" });
-  } catch (error) {
-    console.error("Delete lead error:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-export const convertLeadToCustomer = async (
-  req: AuthRequest,
-  res: Response
-) => {
+export const convertLeadToCustomer = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
 
   try {
@@ -395,16 +276,14 @@ export const convertLeadToCustomer = async (
         recipient: lead.system.assignedAgent,
         type: NotificationType.StatusUpdate,
         title: "Lead Converted",
-        message: `Lead ${lead.identity?.fullName} has been converted`,
+        message: `Lead ${lead.firstName} ${lead.lastName} has been converted`,
         relatedEntity: RelatedEntity.Lead,
         relatedEntityId: lead._id,
         isRead: false,
       });
     }
 
-    res
-      .status(200)
-      .json({ message: "Lead converted successfully", data: lead });
+    res.status(200).json({ message: "Lead converted successfully", data: lead });
   } catch (error) {
     console.error("Convert lead error:", error);
     res.status(500).json({ message: "Internal server error" });
